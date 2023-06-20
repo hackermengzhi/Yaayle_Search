@@ -35,6 +35,7 @@ export default {
   },
   methods: {
     async performSearch() {
+     
       const requestBody = {
         query: this.searchTerm,
         tag: "expand",
@@ -46,8 +47,12 @@ export default {
           "http://127.0.0.1:5000/api/search",
           requestBody
         );
-        this.$emit('search-completed', response.data);
-        this.$router.push('/results');
+        await this.$store.commit("setSearchTerm", this.searchTerm);
+        
+        await this.$store.commit('setSearchResults', response.data);
+        
+        this.$router.push({ path: '/results/' + this.searchTerm })
+
       } catch (error) {
         this.error.message = "An error occurred: " + error.message;
         this.error.show = true;
@@ -65,10 +70,12 @@ export default {
 
 <style scoped>
 .search-container.has-results {
-  justify-content: flex-start;
-  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;  
+  padding: 0 20px;
+  
 }
-
 * {
   user-select: none;
 }
@@ -86,7 +93,7 @@ export default {
 .search-title {
   margin-bottom: 20px;
   font-family: "Product Sans", Arial, sans-serif;
-  font-size: 5em;
+  font-size: 8em;
 }
 
 .y {
@@ -112,8 +119,8 @@ export default {
 .search-box {
   display: flex;
   align-items: center;
-  width: 450px;
-  height: 44px;
+  width: 800px;
+  height: 66px;
   padding: 0 20px;
   margin-bottom: 20px;
   border: 1px solid #dfe1e5;
@@ -150,21 +157,17 @@ export default {
   color: #9aa0a6;
 }
 
-.search-box button {
-  background: none;
-  border: none;
-  margin-right: 15px;
-  cursor: pointer;
-}
 
 .buttons {
   display: flex;
   justify-content: center;
-  gap: 8px;
+  gap: 30px;
+  width: 300px;
+  height: 100px;
 }
 
 .buttons button {
-  font-size: 14px;
+  font-size: 18px;
   padding: 10px 20px;
   margin: 11px 4px;
   border-radius: 4px;
@@ -183,20 +186,7 @@ export default {
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
 }
 
-.button-container {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  max-width: 600px;
-}
 
-.button-container button {
-  padding: 10px 20px;
-  font-size: 18px;
-  border-radius: 4px;
-  flex: 1;
-  margin: 0 5px;
-}
 
 /* Media queries for different screen sizes */
 @media (max-width: 600px) {
