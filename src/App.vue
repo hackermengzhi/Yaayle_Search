@@ -1,3 +1,4 @@
+
 <template>
   <div id="app">
     <router-view />
@@ -6,6 +7,7 @@
 </template>
 
 <script>
+/* eslint-disable */
 import SearchPage from './components/SearchComponent.vue'
 import SearchResults from './components/SearchResult.vue'
 

@@ -10,7 +10,7 @@ const routes = [
   { 
     path: '/results/:query', 
     component: SearchResultsPage,
-    props:['query'],
+    props: true,
 
   },
 ];

@@ -1,6 +1,5 @@
 <template>
   <div>
-    <SearchResultsPage :query="searchTerm" />
     <div class="search-container">
       <h1 class="search-title">
         <span class="y">Y</span>
@@ -22,19 +21,48 @@
       <div class="buttons">
         <button @click="navigateToResults(searchTerm)">Yaayle 搜索</button>
       </div>
+      <div class="advanced-search">
+        <div class="dropdown" @click="toggleAdvancedSearch">
+          <!-- 倒三角图标 -->
+          <text>高级搜索</text>
+          <i class="fa fa-caret-down"></i>
+        </div>
+        <!-- 高级搜索条件 -->
+        <div class="advanced-search-options" v-if="expandSearch">
+          <!-- 单选框 -->
+          <label>
+            <input type="radio" v-model="expandSearchOption" value="expand" />
+            扩展搜索
+          </label>
+          <label>
+            <input type="radio" v-model="expandSearchOption" value="false" />
+            普通搜索
+          </label>
+
+          <!-- 搜索条数框 -->
+          <label class="inputbox">
+            搜索条数：
+            <input type="number" v-model="searchLimit" />
+          </label>
+        </div>
+      </div>
     </div>
+
     <div class="results-container">
       <div class="results-summary">
         <p>
           yaayle为您找到相关结果约 <span>{{ searchResultsCount }}</span> 个
         </p>
       </div>
-      <p class="may">
+      <p
+        class="may"
+        v-if="expandSearchOption === 'expand' && expand_word.length > 0"
+      >
         你可能想找：
         <span v-for="(word, index) in expand_word" :key="index">
           <router-link
             :to="{ path: '/', query: { search: word } }"
-            @click.native="navigateToResults(word)"
+            @click="navigateToResults(word)"
           >
             {{ word }}
           </router-link>
@@ -55,6 +83,7 @@
 </template>
 
 <script>
+/* eslint-disable */
 import axios from "axios";
 import SearchResultsPage from "./SearchResult.vue";
 export default {
@@ -64,6 +93,9 @@ export default {
   props: ["query"],
   data() {
     return {
+      expandSearch: false, // 是否展开高级搜索
+      expandSearchOption: "false", // 扩展搜索选项，根据数据中的对应元素进行绑定
+      searchLimit: 20, // 搜索条数限制，默认为10，根据数据中的对应元素进行绑定
       searchT: "",
       error: {
         show: false,
@@ -103,20 +135,25 @@ export default {
     },
   },
   methods: {
+    toggleAdvancedSearch() {
+      this.expandSearch = !this.expandSearch;
+    },
     async performSearch() {
       if (!this.searchTerm) {
         this.$router.push({ path: "/" });
         return;
       }
+      const expandSearchOption = this.expandSearchOption;
+      const searchLimit = this.searchLimit;
       const requestBody = {
         query: this.searchTerm,
-        tag: "expand",
-        size: "20",
+        tag: expandSearchOption,
+        size: searchLimit,
       };
 
       try {
         const response = await axios.post(
-          "http://127.0.0.1:5000/api/search",
+          "http://10.161.10.129:9500/api/search",
           requestBody
         );
         await this.$store.commit("setSearchResults", response.data);
@@ -135,17 +172,26 @@ export default {
       await this.performSearch(); // Perform the search
     },
     highlightSearchTerm(content) {
-      const searchTerm = this.searchTerm.toLowerCase();
-      const cleanedContent = content.map((sentence) => {
-        const regex = /<strong\b[^<]*>(.*?)<\/strong>/gi;
-        return sentence.replace(regex, "$1");
-      });
-      return cleanedContent
-        .map((sentence) => {
-          const regex = new RegExp(searchTerm, "gi");
-          return sentence.replace(regex, (match) => `<mark>${match}</mark>`);
-        })
-        .join(" ");
+      if (content) {
+        const searchTerms = this.searchTerm.toLowerCase().split(/[\s,]+/); // 将搜索词拆分为多个关键词
+        const cleanedContent = content.map((sentence) => {
+          const regex = /<strong\b[^<]*>(.*?)<\/strong>/gi;
+          return sentence.replace(regex, "$1");
+        });
+        return cleanedContent
+          .map((sentence) => {
+            let highlightedSentence = sentence;
+            searchTerms.forEach((term) => {
+              const regex = new RegExp(term, "gi");
+              highlightedSentence = highlightedSentence.replace(
+                regex,
+                (match) => `<mark>${match}</mark>`
+              );
+            });
+            return highlightedSentence;
+          })
+          .join(" ");
+      }
     },
   },
   mounted() {
@@ -170,6 +216,55 @@ mark {
   height: 9vh;
   text-align: center;
   padding: 0 20px;
+}
+.advanced-search {
+  position: relative;
+  display: inline-block;
+  margin-right: 20px;
+  width: 100px;
+}
+
+.dropdown {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 40px;
+  background-color: #e0e0e0;
+  cursor: pointer;
+}
+
+.dropdown i {
+  font-size: 16px;
+}
+
+.advanced-search-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  padding: 10px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 200px;
+}
+
+.radio-label {
+  display: block;
+  margin-bottom: 8px;
+}
+.inputbox {
+  display: flex;
+  align-items: center;
+}
+
+.inputbox input {
+  margin-left: 8px;
+  width: 100px;
+  padding: 4px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
 .search-title {

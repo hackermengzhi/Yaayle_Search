@@ -12,6 +12,7 @@
       <text>🔍</text>
       <input type="text" v-model="searchTerm" @keyup.enter="performSearch" placeholder="Search Yaayle or type a URL" />
     </div>
+    
     <div class="buttons">
       <button @click="performSearch">Yaayle 搜索</button>
       <button>手气不错</button>
@@ -20,11 +21,13 @@
 </template>
 
 <script>
+/* eslint-disable */
 import axios from "axios";
 
 export default {
   data() {
     return {
+      
       searchTerm: "",
       searchResults: [],
       error: {
@@ -34,8 +37,10 @@ export default {
     };
   },
   methods: {
+    
+
     async performSearch() {
-     
+      
       const requestBody = {
         query: this.searchTerm,
         tag: "expand",
@@ -44,7 +49,7 @@ export default {
 
       try {
         const response = await axios.post(
-          "http://127.0.0.1:5000/api/search",
+          "http://10.161.10.129:9500/api/search",
           requestBody
         );
         await this.$store.commit("setSearchTerm", this.searchTerm);
@@ -66,6 +71,7 @@ export default {
     },
   },
 };
+
 </script>
 
 <style scoped>
@@ -76,6 +82,8 @@ export default {
   padding: 0 20px;
   
 }
+
+
 * {
   user-select: none;
 }
